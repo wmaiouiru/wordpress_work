@@ -827,12 +827,11 @@ img.site-logo {
 .site-nav li {
 	position: relative;
 }
-
+//color: #fff;
 .site-nav > ul > li a {
 	display: block;
 	font-size: 14px;
 	line-height: 40px;
-	color: #fff;
 	padding: 0 15px;
 	text-decoration: none;
 	blr:expression_r(this.onFocus=this.blur());
@@ -910,7 +909,7 @@ img.site-logo {
 	.site-nav > ul > li + li {
 		margin-left: 35px;
 	}
-
+	//color: #fff;
 	.site-nav > ul > li > a {
 		display: block;
 		line-height: 70px;
@@ -918,7 +917,6 @@ img.site-logo {
 		background-color: transparent;
 		border-bottom: 0 solid transparent;
 		border-top: 0 solid transparent;
-		color: #fff;
 	}
 
 	.overlay .main-header .site-nav > ul > li > a {
@@ -980,9 +978,8 @@ img.site-logo {
 	position: relative;
 	z-index: 999;
 }
-
+//	background-color: #000;
 .main-header {
-	background-color: #000;
 	background-image:;
 	color: #555;
 	width: 100%;
@@ -2766,3 +2763,18 @@ border:none;
 }
 
 }
+
+/*
+	449x479
+	https://wordpress.org/support/topic/replace-site-titledescription-with-image-logo/
+
+*/
+.site-title-icon {
+	background: url(http://atthenayoga.com/wp-content/uploads/2016/06/logo-1.png) no-repeat;
+	display: block;
+	height: 60px;
+	width: 50px;
+	background-size: contain;
+	background-position: 0px 10px;
+}
+

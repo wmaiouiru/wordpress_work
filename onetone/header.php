@@ -94,7 +94,7 @@
                      <?php endif;?>
                             <?php endif; ?>
                             <div class="name-box" style=" display:block;">
-                                <a href="<?php echo esc_url(home_url('/')); ?>"><h1 class="site-name"><?php bloginfo('name'); ?></h1></a>
+                                <a href="<?php echo esc_url(home_url('/')); ?>"><div class="site-title-icon"></div></a>
                                 <span class="site-tagline"><?php bloginfo('description'); ?></span>
                             </div>
                             
@@ -131,7 +131,7 @@
                     
                             <?php endif ?>
                             <div class="name-box" style=" display:block;">
-                                <a href="<?php echo esc_url(home_url('/')); ?>"><h1 class="site-name"><?php bloginfo('name'); ?></h1></a>
+                                <a href="<?php echo esc_url(home_url('/')); ?>"><div class="site-title-icon"></div></a>
                                 <span class="site-tagline"><?php bloginfo('description'); ?></span>
                             </div>
                             
