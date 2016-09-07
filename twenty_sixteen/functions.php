@@ -419,3 +419,224 @@ function twentysixteen_widget_tag_cloud_args( $args ) {
 	return $args;
 }
 add_filter( 'widget_tag_cloud_args', 'twentysixteen_widget_tag_cloud_args' );
+
+
+// refs: http://presscustomizr.com/snippet/adding-sections-to-any-page-or-posts-in-customizr/
+function add_custom_sections ( $args ) {
+	//set up global vars with the section parameters
+	global $section_params;
+	$defaults = array(
+		'ids' 				=> array() , 
+		'hook' 				=> '__after_main_wrapper' , 
+		'priority' 			=> 0, 
+		'layout' 			=> 'full', 
+		'context' 			=> 'home',
+		'blur' 				=> true,
+		'apply_shadow' 		=> true,
+		'background' 		=> 'thumb'
+	);
+ 
+	$section_params = wp_parse_args( $args, $defaults );
+	
+	//sets up hooks
+	add_action ( 'wp_head' , '_hook_setup' );
+	add_action('wp_head' , '_my_custom_sections_style');
+}
+ 
+ 
+function _hook_setup() {
+	//gets section(s) parameters
+	global $section_params;
+	extract( $section_params , EXTR_OVERWRITE );
+ 
+	//check context
+	$context_type = is_numeric($context) ? 'post' : $context;
+	switch ( $context_type ) {
+		case 'post':
+			if ( $context != get_the_ID() )
+				return;
+			break;
+		
+		default :
+			if ( ! tc__f('__is_home') )
+       		 	return;
+			break;
+	}
+	//sets up hook
+	add_action ( $hook , '_display_my_custom_sections' , $priority);
+}
+ 
+ 
+function _display_my_custom_sections() {
+	//gets section(s) parameters
+	global $section_params;
+	extract( $section_params , EXTR_OVERWRITE );
+ 
+	//check if we have posts ids
+	if ( ! is_array($ids) || empty($ids) )
+		return;
+ 
+	while ( $current_id = current($ids) ) {
+		$section_object = get_post($current_id);
+		if ( empty($section_object) ) {
+			next($ids);
+			continue;
+		}
+		ob_start()
+		?>
+		<div class="row-fluid custom-section custom-section-<?php echo $current_id ?>">
+		    <div class="custom-section-background"></div>
+		    <div id="content span12" class="article-container">
+		    	<article>
+			    	<div class="entry-content">
+			        	<?php echo apply_filters('the_content' , $section_object -> post_content ); ?>
+			    	</div>
+			    </article>
+		    </div>
+		    <?php
+		    //adds an edit link
+		    $edit_enabled                      = ( (is_user_logged_in()) && current_user_can('edit_pages') && ( 'page' == $section_object -> post_type) ) ? true : false;
+    		$edit_enabled                      = ( (is_user_logged_in()) && current_user_can('edit_post' , $current_id ) && ( 'page' != $section_object -> post_type ) ) ? true : $edit_enabled;
+		    if ( $edit_enabled ) 
+		    	printf('<a class="edit-link btn btn-inverse" href="%1$s" title="%2$s" target="_blank">%2$s</a>',
+                        get_edit_post_link($current_id),
+                        ( 'page' == $section_object -> post_type ) ? __( 'Edit page' , 'customizr' ) : __( 'Edit post' , 'customizr' )
+		   		);
+		   	?>
+		</div>
+		<?php
+		$html = ob_get_contents();
+        if ($html) ob_end_clean();
+       	//wrap in a container if layout is not set to full
+       	if ( 'full' != $layout )
+       		printf('<div class="container boxed-section">%1$s</div>', $html);
+       	else
+       		echo $html;
+ 
+		next($ids);
+	}//end while loop
+}
+ 
+function _my_custom_sections_style() {
+	//gets section(s) parameters
+	global $section_params;
+	extract( $section_params , EXTR_OVERWRITE );
+	if ( ! is_array($ids) || empty($ids) )
+		return;
+	?>
+	<style type="text/css" id="my-sections-style">
+		.custom-section {
+			position: relative;
+			-webkit-box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+			-moz-box-shadow: 0 2px 10px rgba(0,0,0,.25);
+			box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);
+		}
+		.custom-section .article-container {
+			position: relative;
+			z-index: 10;
+			padding: 20px;
+			color: white;
+			width: 90%;
+			padding: 5% 5%;
+			vertical-align: middle;
+			display: inline-block;
+			position: relative;
+		}
+		<?php if ($apply_shadow) : ?>
+		.custom-section .article-container {
+			background: rgba(0, 0, 0, 0.2);
+			filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#33000000', endColorstr='#33000000', GradientType=0);
+		}
+		<?php endif;?>
+		.full-width-section .custom-section .article-container {
+			padding: 0px;
+		}
+		.custom-section .edit-link.btn {
+			z-index: 100;
+			position: absolute;
+			bottom: 10px;
+			right: 10px;
+			right: 12px;
+			z-index: 100;
+			display: block;
+		}
+		.custom-section-background {
+			height: 100%;
+			position: absolute;
+			width: 100%;
+			z-index: 0;
+		}
+		<?php if ( false != $blur) : ?>
+			<?php $blur = !is_numeric($blur) ? 4 : $blur; ?>
+			.custom-section-background {
+				-webkit-filter: blur(<?php echo $blur; ?>px);
+			  	-moz-filter: blur(<?php echo $blur; ?>px);
+			  	-o-filter: blur(<?php echo $blur; ?>px);
+			  	-ms-filter: blur(<?php echo $blur; ?>px);
+			  	filter: blur(<?php echo $blur; ?>px);
+			}
+		<?php endif; ?>
+		<?php
+			$i = 4;
+			foreach ($ids as $key => $post_id) {
+				if ( ! _set_section_background( $background, $post_id, $i ) )
+					continue;
+				echo _set_section_background( $background, $post_id, $i );
+				$i = ($i < 10 ) ? $i+1 : 1;
+			}//end for each
+		?>
+	</style>
+	<?php
+}
+ 
+function _set_section_background($background, $post_id, $i) {
+	if ( 'none' == $background
+		|| ( is_array($background) 
+			&& isset($background[$post_id])
+			&& 'none' == $background[$post_id] )
+		)
+		return false;
+ 
+	if ( 'randcolors' == $background 
+		|| ( is_array($background) 
+			&& isset($background[$post_id]) 
+			&& $background[$post_id] == 'randcolors' )
+		) {
+		//random colors
+	    $rand_color_key         = '';
+ 
+	    $colors             = array("#510300" , "#4D2A33", "#2B3F38", "#03A678" ,"#7A5945" , "#807D77" ,"#073233", "#B3858A","#F57B3D", "#449BB5", "#043D5D", "#EB5055", "#68C39F", "#1A4A72", "#4B77BE", "#5C97BF", "#F5AE30", "#EDA737", "#C8C8C8", "#13181C", "#248F79", "#D95448", "#26B89A" , "#EC6766", "#E74C3C");
+	    $rand_color_key     = array_rand($colors, 1);
+	    return sprintf('.custom-section-%1$s .custom-section-background {background-color:%2$s;opacity: 0.7;}',
+			$post_id,
+			$colors[$rand_color_key]
+		);
+	}//end if random colors
+ 
+ 
+	//if background is a color or an associative array of post_id => color
+	if ( ! is_array($background) && false !== strpos($background, '#')
+		|| ( is_array($background) 
+		&& isset($background[$post_id])
+		&& false !== strpos($background[$post_id], '#') )
+		) {
+		return sprintf('.custom-section-%1$s .custom-section-background {background-color:%2$s;opacity: 0.7;}',
+			$post_id,
+			is_array($background) ? $background[$post_id] : $background
+		);
+	} // end if color defined
+ 
+	$is_rand_image = ( 'randimages' == $background
+		|| 	( is_array($background) 
+			&& isset($background[$post_id]) 
+			&& $background[$post_id] == 'randimages' )
+		) ? true : false;
+	$attachment_id 	= has_post_thumbnail($post_id) ? get_post_thumbnail_id( $post_id ) : false ;
+	$thumb_src 		= 'http://lorempixel.com/g/900/500/city/' .$i ;
+	$thumb_src 		= ( ! $is_rand_image && false != $attachment_id ) ? wp_get_attachment_image_src( $attachment_id, 'large', false ) : $thumb_src;
+	$thumb_src 		= is_array($thumb_src) ? $thumb_src[0] : $thumb_src;
+	return sprintf('.custom-section-%1$s .custom-section-background {background: url("%2$s") no-repeat center center fixed;-webkit-background-size: cover; -moz-background-size: cover; -o-background-size: cover; background-size: cover; }',
+		$post_id,
+		$thumb_src
+	);
+}//end of _set_section_background
